@@ -1,1 +1,46 @@
-/* ccc */ 
+/* ccc */
+
+/* Styles for the code block toggle button */
+.code-block-toggle {
+  cursor: pointer;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  color: var(--text-normal); /* Use normal text color instead of accent/muted */
+}
+
+.code-block-toggle:hover {
+  background-color: var(--interactive-hover);
+}
+
+/* Remove the on/off color classes */
+
+.code-block-icon {
+  stroke-width: 2;
+  stroke: currentColor;
+  fill: none;
+}
+
+/* Styles for the extension modal */
+/* .extension-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+} */
+
+/* .extension-modal-path {
+  font-weight: bold;
+  text-align: center;
+}
+
+.extension-modal-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+} */

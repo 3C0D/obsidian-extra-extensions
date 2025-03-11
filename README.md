@@ -1,6 +1,17 @@
-# Plugin Development Template
+# Extra Extensions
 
-## Introduction
+This plugin allows opening non-markdown extensions, such as:
+- *.js
+- *.ts
+- *.c
+- ...
+
+A small white square button (⬜) appears at the top, next to the title.
+Clicking it converts the document to a code block, allowing syntax highlighting.   
+Click again to get back to initial state.    
+You can add more extensions in the settings.
+
+## Development
 
 This plugin uses a template that automates the development and publication processes on GitHub, including releases.  
 You can develop inside .obsidian>plugins folder or from another folder.  

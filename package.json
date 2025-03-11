@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin-modif",
+	"name": "extra-extensions",
 	"version": "1.0.0",
-	"description": "modified sample plugin",
+	"description": "Open extra extensions and see them with syntax highlighting",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {
@@ -16,7 +16,13 @@
 		"lint": "eslint . --ext .ts",
 		"lint:fix": "eslint . --ext .ts --fix"
 	},
-	"keywords": [],
+	"keywords": [
+		"obsidian",
+		"plugin",
+		"vscode",
+		"code editor",
+		"development"
+	],
 	"author": "3C0D",
 	"license": "MIT",
 	"devDependencies": {
