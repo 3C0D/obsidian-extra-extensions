@@ -1,6 +1,6 @@
-import { MarkdownView } from "obsidian";
-import type { OpenAsCodeSettings } from "./types";
-import type OpenAsCodePlugin from "./main";
+import { MarkdownView, Notice } from "obsidian";
+import type { OpenAsCodeSettings } from "./types.ts";
+import type OpenAsCodePlugin from "./main.ts";
 
 
 export class ButtonHandler {
@@ -13,12 +13,12 @@ export class ButtonHandler {
 
     registerButton(): void {
         // Create event with file-open
-        const eventRef = this.plugin.app.workspace.on('file-open', (file) => {
+        this.plugin.registerEvent(this.plugin.app.workspace.on('file-open', (file) => {
             if (!file) return;
             const extension = file.extension.toLowerCase();
 
             // Use extension mappings from settings
-            const settings = this.plugin.settings
+            const settings = this.plugin.settings;
             const supportedExtensions = Object.keys(settings.languageMappings);
 
             if (supportedExtensions.includes(extension)) {
@@ -26,7 +26,7 @@ export class ButtonHandler {
             } else {
                 this.removeButton();
             }
-        });
+        }));
     }
 
     private addButton(): void {

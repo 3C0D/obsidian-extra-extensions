@@ -6,11 +6,11 @@ import {
   TFile,
   TFolder,
 } from "obsidian";
-import { ExtensionHandler } from "./extension-handler";
-import { ButtonHandler } from "./button-handler";
-import { OpenAsCodeSettingTab } from "./settings";
-import { DEFAULT_SETTINGS, type OpenAsCodeSettings } from "./types";
-import { EditExtensionModal } from "./modal-change-extension";
+import { ExtensionHandler } from "./extension-handler.ts";
+import { ButtonHandler } from "./button-handler.ts";
+import { OpenAsCodeSettingTab } from "./settings.ts";
+import { DEFAULT_SETTINGS, type OpenAsCodeSettings } from "./types.ts";
+import { EditExtensionModal } from "./modal-change-extension.ts";
 
 export default class OpenAsCodePlugin extends Plugin {
   settings: OpenAsCodeSettings;
@@ -54,7 +54,7 @@ export default class OpenAsCodePlugin extends Plugin {
   }
 }
 
-function addMenuItem(app: App, menu: Menu, file: TAbstractFile) {
+function addMenuItem(app: App, menu: Menu, file: TAbstractFile): void {
   if (file instanceof TFolder) {
     return;
   }

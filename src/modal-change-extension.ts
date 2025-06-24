@@ -20,7 +20,7 @@ export class EditExtensionModal extends Modal {
     this.newExt = this.currentExt;
   }
 
-  onOpen() {
+  onOpen(): void {
     const { contentEl } = this;
     contentEl.empty();
 
@@ -71,12 +71,12 @@ export class EditExtensionModal extends Modal {
     });
   }
 
-  onClose() {
+  onClose(): void {
     const { contentEl } = this;
     contentEl.empty();
   }
 
-  private async saveChanges() {
+  private async saveChanges(): Promise<void> {
     await this.app.vault.rename(this.file, this.getFullPath());
     this.close();
   }

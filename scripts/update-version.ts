@@ -1,7 +1,34 @@
 import { readFile, writeFile } from "fs/promises";
 import dedent from "dedent";
-import { inc, valid } from "semver";
-import { askQuestion, createReadlineInterface, gitExec } from "./utils";
+import { askQuestion, createReadlineInterface, gitExec, ensureGitSync } from "./utils.js";
+
+// Simple version increment functions to avoid semver compatibility issues
+function incrementVersion(version: string, type: 'patch' | 'minor' | 'major'): string {
+  const parts = version.split('.').map(Number);
+  if (parts.length !== 3) return '';
+
+  switch (type) {
+    case 'patch':
+      parts[2]++;
+      break;
+    case 'minor':
+      parts[1]++;
+      parts[2] = 0;
+      break;
+    case 'major':
+      parts[0]++;
+      parts[1] = 0;
+      parts[2] = 0;
+      break;
+  }
+
+  return parts.join('.');
+}
+
+function isValidVersion(version: string): boolean {
+  const versionRegex = /^\d+\.\d+\.\d+$/;
+  return versionRegex.test(version);
+}
 
 const rl = createReadlineInterface();
 
@@ -18,15 +45,16 @@ async function getTargetVersion(currentVersion: string): Promise<string> {
   switch (updateType.trim()) {
     case "p":
     case "1":
-      return inc(currentVersion, "patch") || "";
+      return incrementVersion(currentVersion, "patch");
     case "min":
     case "2":
-      return inc(currentVersion, "minor") || "";
+      return incrementVersion(currentVersion, "minor");
     case "maj":
     case "3":
-      return inc(currentVersion, "major") || "";
+      return incrementVersion(currentVersion, "major");
     default:
-      return valid(updateType.trim()) || "";
+      const trimmed = updateType.trim();
+      return isValidVersion(trimmed) ? trimmed : "";
   }
 }
 
@@ -34,7 +62,7 @@ async function updateJsonFile(filename: string, updateFn: (json: any) => void): 
   try {
     const content = JSON.parse(await readFile(filename, "utf8"));
     updateFn(content);
-    await writeFile(filename, JSON.stringify(content, null, "2"));
+    await writeFile(filename, JSON.stringify(content, null, "\t"));
   } catch (error) {
     console.error(`Error updating ${filename}:`, error instanceof Error ? error.message : String(error));
     throw error;
@@ -50,7 +78,7 @@ async function updateManifestVersions(targetVersion: string): Promise<void> {
       updateJsonFile("manifest.json", json => json.version = targetVersion),
       updateJsonFile("versions.json", json => json[targetVersion] = minAppVersion),
       updateJsonFile("package.json", json => json.version = targetVersion),
-      updateJsonFile("package-lock.json", json => json.version = targetVersion)
+      // updateJsonFile("package-lock.json", json => json.version = targetVersion)
     ]);
   } catch (error) {
     console.error("Error updating manifest versions:", error instanceof Error ? error.message : String(error));
@@ -68,17 +96,25 @@ async function updateVersion(): Promise<void> {
       return;
     }
 
-    await updateManifestVersions(targetVersion);
-
     try {
+      // Update all files first
+      await updateManifestVersions(targetVersion);
+      console.log(`Files updated to version ${targetVersion}`);
+
+      // Add files to git
       gitExec("git add manifest.json package.json versions.json");
       gitExec(`git commit -m "Updated to version ${targetVersion}"`);
-    } catch {
-      console.log("Commit already exists or failed.");
+      console.log("Changes committed");
+    } catch (error) {
+      console.error("Error during update or commit:", error instanceof Error ? error.message : String(error));
+      console.log("Operation failed.");
       return;
     }
 
     try {
+      // Ensure Git is synchronized before pushing
+      await ensureGitSync();
+
       gitExec("git push");
       console.log(`Version successfully updated to ${targetVersion} and pushed.`);
     } catch (pushError) {

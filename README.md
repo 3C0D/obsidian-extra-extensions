@@ -6,10 +6,11 @@ This plugin allows opening non-markdown extensions, such as:
 - *.c
 - ...
 
-A small white square button (⬜) appears at the top, next to the title.
-Clicking it converts the document to a code block, allowing syntax highlighting.   
-Click again to get back to initial state.    
-You can add more extensions in the settings.
+A small button appears at the top, next to the title.
+Clicking it toggles the document between code block view (with syntax highlighting) and the initial state.
+The button's appearance changes to indicate the current view mode.
+You can customize which file extensions are supported by adding more extensions in the plugin settings.
+For example, you can add "py" or "java" to view Python or Java files with syntax highlighting.
 
 ## Development
 

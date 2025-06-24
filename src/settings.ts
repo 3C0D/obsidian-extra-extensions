@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import OpenAsCodePlugin from "./main";
+import OpenAsCodePlugin from "./main.ts";
 
 export class OpenAsCodeSettingTab extends PluginSettingTab {
   private extList: HTMLElement;

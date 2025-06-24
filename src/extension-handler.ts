@@ -1,4 +1,4 @@
-import type OpenAsCodePlugin from "./main";
+import type OpenAsCodePlugin from "./main.ts";
 
 export class ExtensionHandler {
   constructor(private plugin: OpenAsCodePlugin) {
@@ -12,12 +12,16 @@ export class ExtensionHandler {
   
   // Registers all code extensions to be displayed as markdown
   registerCodeExtensions(): void {
-    try {
-      const extensions = this.getCodeExtensions();
-      this.plugin.registerExtensions(extensions, 'markdown');
-    } catch (error) {
-      console.error("Failed to register extensions:", error);
-    }
+      try {
+          const extensions = this.getCodeExtensions();
+          // Filter out extensions that are already registered
+          const newExtensions = extensions.filter(ext => !this.plugin.app.viewRegistry.getTypeByExtension(ext));
+          if (newExtensions.length > 0) {
+              this.plugin.registerExtensions(newExtensions, 'markdown');
+          }
+      } catch (error) {
+          console.error("Failed to register extensions:", error);
+      }
   }
   
   // Unregisters extensions when the plugin is disabled
