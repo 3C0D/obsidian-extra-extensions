@@ -23,7 +23,7 @@ export default class OpenAsCodePlugin extends Plugin {
 
     // Initialize handlers
     this.extensionHandler = new ExtensionHandler(this);
-    this.buttonHandler = new ButtonHandler(this);
+    this.buttonHandler = new ButtonHandler(this, this.app);
 
     // Register the settings tab
     this.addSettingTab(new OpenAsCodeSettingTab(this.app, this));

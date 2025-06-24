@@ -1,14 +1,11 @@
-import { MarkdownView, Notice } from "obsidian";
+import { App, MarkdownView, Notice } from "obsidian";
 import type { OpenAsCodeSettings } from "./types.ts";
 import type OpenAsCodePlugin from "./main.ts";
 
 
 export class ButtonHandler {
-    private plugin: OpenAsCodePlugin;
     private buttonEl: HTMLElement | null = null;
-
-    constructor(plugin: OpenAsCodePlugin) {
-        this.plugin = plugin;
+    constructor(private plugin: OpenAsCodePlugin, private app: App) {
     }
 
     registerButton(): void {
@@ -47,6 +44,17 @@ export class ButtonHandler {
         this.buttonEl.addEventListener('click', () => {
             this.toggleCodeBlockView();
         });
+
+        // Add listener for content changes to update button appearance
+        const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+        if (activeView) {
+            // Update button when editor content changes
+            this.plugin.registerEvent(
+                this.app.workspace.on("layout-change", () => {
+                    setTimeout(() => this.updateButtonAppearance(), 50);
+                })
+            );
+        }
 
         // Add the button to the title bar, next to the book icon
         titleEl.appendChild(this.buttonEl);
@@ -105,6 +113,10 @@ export class ButtonHandler {
                 // Update the editor content
                 activeView.editor.setValue(codeBlockContent);
             }
+            
+            // Update button appearance after content change
+            setTimeout(() => this.updateButtonAppearance(), 100);
+            
         } catch (error) {
             console.error("Failed to toggle code block view:", error);
             new Notice("Failed to toggle code block view");
@@ -117,9 +129,30 @@ export class ButtonHandler {
     private updateButtonAppearance(): void {
         if (!this.buttonEl) return;
 
-        // Use a neutral icon that indicates toggling functionality
-        // No color change based on state
-        this.buttonEl.innerHTML = '<svg viewBox="0 0 100 100" class="code-block-icon" width="16" height="16"><path fill="currentColor" d="M30,30 L70,30 L70,70 L30,70 Z M40,40 L60,40 M40,50 L60,50 M40,60 L60,60"></path></svg>';
-        this.buttonEl.setAttribute('aria-label', 'Toggle code block view');
+        // Check current state to determine button appearance
+        const isCodeBlockView = this.isCurrentlyInCodeBlockView();
+        
+        if (isCodeBlockView) {
+            // Code block view - show "code" icon with active state
+            this.buttonEl.innerHTML = '<svg viewBox="0 0 24 24" class="code-block-icon" width="16" height="16"><path fill="currentColor" d="M8 3L6 5L10 9L6 13L8 15L14 9L8 3ZM16 17V19H18V17H16Z"></path></svg>';
+            this.buttonEl.addClass('code-block-active');
+            this.buttonEl.setAttribute('aria-label', 'Switch to normal view');
+        } else {
+            // Normal view - show "document" icon with inactive state
+            this.buttonEl.innerHTML = '<svg viewBox="0 0 24 24" class="code-block-icon" width="16" height="16"><path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"></path></svg>';
+            this.buttonEl.removeClass('code-block-active');
+            this.buttonEl.setAttribute('aria-label', 'Switch to code block view');
+        }
+    }
+
+    private isCurrentlyInCodeBlockView(): boolean {
+        const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+        if (!activeView) return false;
+
+        const currentContent = activeView.editor.getValue();
+        const hasOpeningCodeBlock = /^\s*`{5}[\w]*\s*\n/.test(currentContent);
+        const hasClosingCodeBlock = /\n\s*`{5}\s*$/.test(currentContent);
+        
+        return hasOpeningCodeBlock && hasClosingCodeBlock;
     }
 }

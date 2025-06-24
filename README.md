@@ -6,11 +6,14 @@ This plugin allows opening non-markdown extensions, such as:
 - *.c
 - ...
 
-A small button appears at the top, next to the title.
+An icon appears at the top, next to the title.
 Clicking it toggles the document between code block view (with syntax highlighting) and the initial state.
 The button's appearance changes to indicate the current view mode.
 You can customize which file extensions are supported by adding more extensions in the plugin settings.
-For example, you can add "py" or "java" to view Python or Java files with syntax highlighting.
+You can edit extension from explorer context menu. For example change a new note extension to *.py.
+
+![normal view](assets/normal-view.png)
+![code view](assets/code-view.png)
 
 ## Development
 
@@ -61,8 +64,3 @@ Important: if you develop from another folder, you need to fill the `.env` file 
 ### Additional Features
 
 - **obsidian-typings**: This template automatically includes obsidian-typings, providing access to additional types not present in the official API.
-
-### SASS Support (need to be reviewed)
-
-For SASS support, check out the `sass-ready` branch in the original template repository. 
-When you are using the template for this branch, you need to check use all branchs option. then after you clone your new plugin, there is a batch in the root folder to replace the master branch by sass-ready one. run this once

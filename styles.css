@@ -10,19 +10,30 @@
   border-radius: 4px;
   width: 24px;
   height: 24px;
-  color: var(--text-normal); /* Use normal text color instead of accent/muted */
+  color: var(--text-muted);
+  transition: all 0.2s ease;
 }
 
 .code-block-toggle:hover {
   background-color: var(--interactive-hover);
+  color: var(--text-normal);
 }
 
-/* Remove the on/off color classes */
+/* Active state when in code block view */
+.code-block-toggle.code-block-active {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.code-block-toggle.code-block-active:hover {
+  background-color: var(--interactive-accent-hover);
+  color: var(--text-on-accent);
+}
 
 .code-block-icon {
   stroke-width: 2;
   stroke: currentColor;
-  fill: none;
+  fill: currentColor;
 }
 
 /* Styles for the extension modal */
