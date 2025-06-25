@@ -36,6 +36,45 @@
   fill: currentColor;
 }
 
+/* Styles for extension settings */
+.extension-validation-message {
+  background-color: var(--background-modifier-error-rgb, rgba(255, 107, 107, 0.1));
+  border: 1px solid var(--color-red);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-error, #d73a49);
+  font-weight: 500;
+}
+
+/* Increase textarea height for extensions */
+.setting-item-control textarea {
+  min-height: 80px;
+}
+
+.extension-list {
+  background-color: var(--background-secondary);
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 10px;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.extension-list h6 {
+  margin: 0 0 8px 0;
+  color: var(--text-normal);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.extension-list p {
+  margin: 0;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
 /* Styles for the extension modal */
 /* .extension-modal {
   display: flex;
@@ -48,9 +87,37 @@
 /* .extension-modal-path {
   font-weight: bold;
   text-align: center;
+
+/* Styles for extension validation */
+.extension-textarea-error {
+  border: 2px solid var(--text-error) !important;
+  background-color: var(--background-modifier-error) !important;
 }
 
-.extension-modal-input {
+.extension-validation-error {
+  color: var(--text-error);
+  font-size: 0.9em;
+  margin-top: 5px;
+  padding: 5px;
+  background-color: var(--background-modifier-error);
+  border-radius: 4px;
+  border-left: 3px solid var(--text-error);
+}
+
+.extension-validation-error.hidden {
+  display: none;
+}
+
+.extension-settings-section {
+  margin-bottom: 20px;
+}
+
+.extension-settings-section h6 {
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+/* .extension-modal-input {
   display: flex;
   align-items: center;
   gap: 0.5rem;

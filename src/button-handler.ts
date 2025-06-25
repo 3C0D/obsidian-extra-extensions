@@ -14,9 +14,9 @@ export class ButtonHandler {
             if (!file) return;
             const extension = file.extension.toLowerCase();
 
-            // Use extension mappings from settings
+            // Use all active extensions from settings
             const settings = this.plugin.settings;
-            const supportedExtensions = Object.keys(settings.languageMappings);
+            const supportedExtensions = settings.finalExtensions || [];
 
             if (supportedExtensions.includes(extension)) {
                 this.addButton();
@@ -86,7 +86,7 @@ export class ButtonHandler {
 
         // Use extension mappings from settings
         const settings = this.plugin.settings as OpenAsCodeSettings;
-        const languageMode = settings.languageMappings[extension] || "markdown";
+        const languageMode = settings.defaultLanguageMappings[extension] || "markdown";
 
         try {
             // Get current content
@@ -113,14 +113,14 @@ export class ButtonHandler {
                 // Update the editor content
                 activeView.editor.setValue(codeBlockContent);
             }
-            
+
             // Update button appearance after content change
             setTimeout(() => this.updateButtonAppearance(), 100);
-            
+
         } catch (error) {
             console.error("Failed to toggle code block view:", error);
             new Notice("Failed to toggle code block view");
-        }finally {
+        } finally {
             if (wasInPreviewMode) {
                 await activeView.setState({ mode: 'preview' }, { history: false });
             }
@@ -131,7 +131,7 @@ export class ButtonHandler {
 
         // Check current state to determine button appearance
         const isCodeBlockView = this.isCurrentlyInCodeBlockView();
-        
+
         if (isCodeBlockView) {
             // Code block view - show "code" icon with active state
             this.buttonEl.innerHTML = '<svg viewBox="0 0 24 24" class="code-block-icon" width="16" height="16"><path fill="currentColor" d="M8 3L6 5L10 9L6 13L8 15L14 9L8 3ZM16 17V19H18V17H16Z"></path></svg>';
@@ -152,7 +152,7 @@ export class ButtonHandler {
         const currentContent = activeView.editor.getValue();
         const hasOpeningCodeBlock = /^\s*`{5}[\w]*\s*\n/.test(currentContent);
         const hasClosingCodeBlock = /\n\s*`{5}\s*$/.test(currentContent);
-        
+
         return hasOpeningCodeBlock && hasClosingCodeBlock;
     }
 }

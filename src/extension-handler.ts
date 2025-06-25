@@ -5,29 +5,42 @@ export class ExtensionHandler {
   }
 
   // Returns a copy of the supported code extensions
-  getCodeExtensions(): string[] {
-    const settings = this.plugin.settings;
-    return [...Object.keys(settings.languageMappings), ...(settings.customExtensions || [])];
+  getAddedExtensions(): string[] {
+    return [...this.plugin.settings.finalExtensions];
   }
-  
-  // Registers all code extensions to be displayed as markdown
-  registerCodeExtensions(): void {
-      try {
-          const extensions = this.getCodeExtensions();
-          // Filter out extensions that are already registered
-          const newExtensions = extensions.filter(ext => !this.plugin.app.viewRegistry.getTypeByExtension(ext));
-          if (newExtensions.length > 0) {
-              this.plugin.registerExtensions(newExtensions, 'markdown');
-          }
-      } catch (error) {
-          console.error("Failed to register extensions:", error);
-      }
+
+  getNewExtensions(extensions: string[]): string[] {
+    return extensions.filter(ext => !this.plugin.app.viewRegistry.getTypeByExtension(ext));
   }
-  
-  // Unregisters extensions when the plugin is disabled
-  unregisterCodeExtensions(): void {
+
+  hasUnregisteredExtensions(extensions: string[]): boolean {
+    // Filter out extensions that are already registered
+    const newExtensions = this.getNewExtensions(extensions);
+    return newExtensions.length > 0;
+
+  }
+
+  /**
+   *
+   * @param extensions - Array of file extensions (default: getAddedExtensions())
+   */
+  registerCodeExtensions(extensions: string[] = this.getAddedExtensions()): void {
     try {
-      const extensions = this.getCodeExtensions();
+      if (this.hasUnregisteredExtensions(extensions)) {
+        const newExtensions = this.getNewExtensions(extensions);
+        this.plugin.registerExtensions(newExtensions, 'markdown');
+      }
+    } catch (error) {
+      console.error("Failed to register extensions:", error);
+    }
+  }
+
+  /**
+   * 
+   * @param extensions - Array of file extensions (default: getAddedExtensions())
+   */
+  unregisterCodeExtensions(extensions: string[] = this.getAddedExtensions()): void {
+    try {
       this.plugin.app.viewRegistry.unregisterExtensions(extensions);
     } catch (error) {
       console.error("Failed to unregister extensions:", error);

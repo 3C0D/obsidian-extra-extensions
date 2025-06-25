@@ -18,7 +18,6 @@ export default class OpenAsCodePlugin extends Plugin {
   buttonHandler: ButtonHandler;
 
   async onload(): Promise<void> {
-    // Load settings
     await this.loadSettings();
 
     // Initialize handlers
@@ -35,12 +34,23 @@ export default class OpenAsCodePlugin extends Plugin {
     this.buttonHandler.registerButton();
 
     // Register the event listener for file rename
-    this.registerEvent(this.app.workspace.on("file-menu", (menu, file) => addMenuItem(app, menu, file)));
+    this.registerEvent(this.app.workspace.on("file-menu", (menu, file) => addMenuItem(this.app, menu, file)));
 
   }
 
   async loadSettings(): Promise<void> {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    
+    // Initialize finalExtensions if empty (migration from old settings)
+    if (!this.settings.finalExtensions || this.settings.finalExtensions.length === 0) {
+      this.settings.finalExtensions = [
+        ...Object.keys(this.settings.defaultLanguageMappings),
+        ...(this.settings.customExtensions || [])
+      ];
+      // Remove duplicates
+      this.settings.finalExtensions = [...new Set(this.settings.finalExtensions)];
+      await this.saveSettings();
+    }
   }
 
   async saveSettings(): Promise<void> {
