@@ -17,7 +17,6 @@ export class ExtensionHandler {
     // Filter out extensions that are already registered
     const newExtensions = this.getNewExtensions(extensions);
     return newExtensions.length > 0;
-
   }
 
   /**

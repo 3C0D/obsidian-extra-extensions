@@ -35,7 +35,7 @@ export class ButtonHandler {
         if (!titleEl) return;
 
         // Create the button
-        this.buttonEl = createEl('div', { cls: ['view-action', 'code-block-toggle'] });
+        this.buttonEl = createEl('div', { cls: 'code-block-toggle' });
 
         // Set initial state based on current view
         this.updateButtonAppearance();
@@ -85,7 +85,7 @@ export class ButtonHandler {
         const extension = file.extension.toLowerCase();
 
         // Use extension mappings from settings
-        const settings = this.plugin.settings as OpenAsCodeSettings;
+        const settings = this.plugin.settings;
         const languageMode = settings.defaultLanguageMappings[extension] || "markdown";
 
         try {

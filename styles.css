@@ -27,7 +27,10 @@
 
 .code-block-toggle.code-block-active:hover {
   background-color: var(--interactive-accent-hover);
-  color: var(--text-on-accent);
+  color: var(--text-on-accent-hover);
+  transform: scale(1.07);
+
+  transition: all 0.2s ease;
 }
 
 .code-block-icon {

@@ -86,11 +86,15 @@ function addMenuItem(app: App, menu: Menu, file: TAbstractFile): void {
         setTimeout(() => {
           const modalElement = modal.containerEl.querySelector('.modal') as HTMLElement;
           if (modalElement) {
+            // Calculate offset to move modal from center to 60px from left
             const windowWidth = document.documentElement.clientWidth;
-            const leftMargin = 60;
+            // const modalWidth = modalElement.offsetWidth || 400; // fallback width
             const modalWidth = parseInt(modalElement.style.width);
-            const maxRightPosition = windowWidth / 2 - leftMargin - modalWidth / 2; // from center
-            modalElement.style.right = `${maxRightPosition}px`;
+            const centerPosition = windowWidth / 2;
+            const targetPosition = 60 + (modalWidth / 2); // 60px from left + half modal width
+            const offsetX = targetPosition - centerPosition;
+            
+            modalElement.style.transform = `translateX(${offsetX}px)`;
           }
         }, 0);
       });

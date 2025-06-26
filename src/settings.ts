@@ -40,14 +40,14 @@ export class OpenAsCodeSettingTab extends PluginSettingTab {
     // Add extensions setting
     const extensionSetting = new Setting(containerEl)
       .setName('Active Extensions')
-      .setDesc('Manage all file extensions to be treated as code (comma separated, no dots).');
+      .setDesc('Manage all file extensions to be treated as code (comma separated, no dots). ❗Click outside the text area to validate changes.');
     
     extensionSetting.addTextArea(text => {
       this.textAreaEl = text.inputEl;
       text
         .setPlaceholder('js, ts, py, md, txt, csv')
         .setValue(this.plugin.settings.finalExtensions.join(', '))
-        .inputEl.style.height = '100px'; // Make textarea taller
+        .inputEl.style.height = '130px'; // Make textarea taller
       
       text.inputEl.addEventListener('input', () => {
         this.validateExtensionsOnInput();
@@ -201,16 +201,6 @@ export class OpenAsCodeSettingTab extends PluginSettingTab {
     }
     this.hideValidationError();
   }
-
-  private areExtensionsEqual(arr1: string[], arr2: string[]): boolean {
-    if (arr1.length !== arr2.length) return false;
-
-    const sorted1 = [...arr1].sort();
-    const sorted2 = [...arr2].sort();
-
-    return sorted1.every((ext, index) => ext === sorted2[index]);
-  }
-
 
   // Method to refresh the list of extensions
   private updateExtensionsList(): void {
