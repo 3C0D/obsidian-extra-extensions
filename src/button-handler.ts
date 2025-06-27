@@ -1,7 +1,5 @@
 import { App, MarkdownView, Notice } from "obsidian";
-import type { OpenAsCodeSettings } from "./types.ts";
 import type OpenAsCodePlugin from "./main.ts";
-
 
 export class ButtonHandler {
     private buttonEl: HTMLElement | null = null;
@@ -12,6 +10,7 @@ export class ButtonHandler {
         // Create event with file-open
         this.plugin.registerEvent(this.plugin.app.workspace.on('file-open', (file) => {
             if (!file) return;
+            console.log("File opened:", file.name);
             const extension = file.extension.toLowerCase();
 
             // Use all active extensions from settings
@@ -30,8 +29,11 @@ export class ButtonHandler {
         // Remove existing button if any
         this.removeButton();
 
-        // Get the title bar where we'll add our button
-        const titleEl = document.querySelector('.view-header-title-container');
+        // Get the active leaf and its title container
+        const activeLeaf = this.plugin.app.workspace.getLeaf(false);
+        if (!activeLeaf) return;
+        
+        const titleEl = activeLeaf.view.containerEl.querySelector('.view-header-title-container');
         if (!titleEl) return;
 
         // Create the button
@@ -61,10 +63,19 @@ export class ButtonHandler {
     }
 
     removeButton(): void {
+        // Remove button from current active leaf
         if (this.buttonEl && this.buttonEl.parentNode) {
             this.buttonEl.parentNode.removeChild(this.buttonEl);
             this.buttonEl = null;
         }
+        
+        // Also remove any existing buttons from all leaves to prevent duplicates
+        const allButtons = document.querySelectorAll('.code-block-toggle');
+        allButtons.forEach(button => {
+            if (button.parentNode) {
+                button.parentNode.removeChild(button);
+            }
+        });
     }
 
     async toggleCodeBlockView(): Promise<void> {
