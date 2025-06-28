@@ -39,15 +39,15 @@ export class OpenAsCodeSettingTab extends PluginSettingTab {
 
     // Add extensions setting
     const extensionSetting = new Setting(containerEl)
-      .setName('Active Extensions')
-      .setDesc('Manage all file extensions to be treated as code (comma separated, no dots). ❗Click outside the text area to validate changes.');
+      .setName('Extra Extensions')
+      .setDesc('Manage all file extensions to be viewed as markdown. (comma separated, no dots). ❗Click outside the text area to validate changes.');
     
     extensionSetting.addTextArea(text => {
       this.textAreaEl = text.inputEl;
       text
         .setPlaceholder('js, ts, py, md, txt, csv')
         .setValue(this.plugin.settings.finalExtensions.join(', '))
-        .inputEl.style.height = '130px'; // Make textarea taller
+        .inputEl.style.height = '130px'; // Make textarea higher
       
       text.inputEl.addEventListener('input', () => {
         this.validateExtensionsOnInput();
@@ -64,11 +64,11 @@ export class OpenAsCodeSettingTab extends PluginSettingTab {
     });
     this.validationEl.style.display = 'none';
     this.validationEl.style.color = '#ff6b6b';
-    this.validationEl.style.fontSize = '12px';
+    this.validationEl.style.fontSize = '0.8em';
     this.validationEl.style.marginTop = '5px';
 
     // Display supported extensions
-    new Setting(containerEl).setName('Extra Extensions').setHeading();
+    new Setting(containerEl).setName('Extra Extensions summary').setHeading();
 
     const extList = containerEl.createEl('div', { cls: 'extension-list' });
 
@@ -220,21 +220,21 @@ export class OpenAsCodeSettingTab extends PluginSettingTab {
       if (activeDefaults.length > 0) {
         this.extList.createEl('p', { 
           text: `Default: ${activeDefaults.sort().join(', ')}`,
-          attr: { style: 'color: #888; margin: 5px 0; font-size: 13px;' }
+          attr: { style: 'color: #888; margin: 5px 0; font-size: 0.9em;' }
         });
       }
       
       if (activeCustoms.length > 0) {
         this.extList.createEl('p', { 
           text: `Custom: ${activeCustoms.sort().join(', ')}`,
-          attr: { style: 'color: #4a9eff; margin: 5px 0; font-size: 13px;' }
+          attr: { style: 'color: #4a9eff; margin: 5px 0; font-size: 0.9em;' }
         });
       }
       
       // Show total count
       this.extList.createEl('p', { 
         text: `Total: ${finalExtensions.length} extensions`,
-        attr: { style: 'color: #666; margin-top: 10px; font-size: 12px; font-style: italic;' }
+        attr: { style: 'color: #666; margin-top: 10px; font-size: 0.8em; font-style: italic;' }
       });
     } else {
       this.extList.createEl('p', { 

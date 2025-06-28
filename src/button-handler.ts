@@ -10,7 +10,6 @@ export class ButtonHandler {
         // Create event with file-open
         this.plugin.registerEvent(this.plugin.app.workspace.on('file-open', (file) => {
             if (!file) return;
-            console.log("File opened:", file.name);
             const extension = file.extension.toLowerCase();
 
             // Use all active extensions from settings
@@ -32,7 +31,7 @@ export class ButtonHandler {
         // Get the active leaf and its title container
         const activeLeaf = this.plugin.app.workspace.getLeaf(false);
         if (!activeLeaf) return;
-        
+
         const titleEl = activeLeaf.view.containerEl.querySelector('.view-header-title-container');
         if (!titleEl) return;
 
@@ -63,19 +62,16 @@ export class ButtonHandler {
     }
 
     removeButton(): void {
-        // Remove button from current active leaf
-        if (this.buttonEl && this.buttonEl.parentNode) {
-            this.buttonEl.parentNode.removeChild(this.buttonEl);
-            this.buttonEl = null;
-        }
-        
-        // Also remove any existing buttons from all leaves to prevent duplicates
+        // Remove all code-block-toggle buttons
         const allButtons = document.querySelectorAll('.code-block-toggle');
         allButtons.forEach(button => {
             if (button.parentNode) {
                 button.parentNode.removeChild(button);
             }
         });
+
+        // Reset internal button reference
+        this.buttonEl = null;
     }
 
     async toggleCodeBlockView(): Promise<void> {
@@ -97,18 +93,15 @@ export class ButtonHandler {
 
         // Use extension mappings from settings
         const settings = this.plugin.settings;
-        const languageMode = settings.defaultLanguageMappings[extension] || "markdown";
+        // If extension exists in defaultLanguageMappings, use the mapped language
+        // Otherwise, use the extension directly as language mode
+        const languageMode = settings.defaultLanguageMappings[extension] || extension;
 
         try {
             // Get current content
             const currentContent = activeView.editor.getValue();
 
-            // Simplified check: just look for 5 backticks at beginning and end
-            const hasOpeningCodeBlock = /^\s*`{5}[\w]*\s*\n/.test(currentContent);
-            const hasClosingCodeBlock = /\n\s*`{5}\s*$/.test(currentContent);
-            const isCodeBlockView = hasOpeningCodeBlock && hasClosingCodeBlock;
-
-            if (isCodeBlockView) {
+            if (this.isCurrentlyInCodeBlockView()) {
                 // Remove code block formatting - just remove the first and last lines with 5 backticks
                 const contentWithoutCodeBlock = currentContent
                     .replace(/^\s*`{5}[\w]*\s*\n/, '') // Remove opening code block
@@ -137,6 +130,7 @@ export class ButtonHandler {
             }
         }
     }
+
     private updateButtonAppearance(): void {
         if (!this.buttonEl) return;
 

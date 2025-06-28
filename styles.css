@@ -9,12 +9,6 @@
   width: 24px;
   height: 24px;
   color: var(--text-muted);
-  transition: all 0.2s ease;
-}
-
-.code-block-toggle:hover {
-  background-color: var(--interactive-hover);
-  color: var(--text-normal);
 }
 
 /* Active state when in code block view */
@@ -27,7 +21,6 @@
   background-color: var(--interactive-accent-hover);
   color: var(--text-on-accent-hover);
   transform: scale(1.07);
-
   transition: all 0.2s ease;
 }
 
@@ -44,7 +37,7 @@
   border-radius: 4px;
   padding: 8px 12px;
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 0.9em;
   line-height: 1.4;
   color: var(--text-error, #d73a49);
   font-weight: 500;
@@ -67,7 +60,7 @@
   margin: 0 0 8px 0;
   color: var(--text-normal);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 1em;
 }
 
 .extension-list p {
