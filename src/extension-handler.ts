@@ -6,9 +6,14 @@ export class ExtensionHandler {
 
   // Returns a copy of the supported code extensions
   getAddedExtensions(): string[] {
-    return [...this.plugin.settings.finalExtensions];
+    return Object.keys(this.plugin.settings.finalExtensions);
   }
-
+  
+  // Returns the language mapping for a given extension
+  getLanguageForExtension(extension: string): string {
+    return this.plugin.settings.finalExtensions[extension] || extension;
+  }
+  
   getNewExtensions(extensions: string[]): string[] {
     return extensions.filter(ext => !this.plugin.app.viewRegistry.getTypeByExtension(ext));
   }

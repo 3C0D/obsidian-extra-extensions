@@ -7,13 +7,20 @@ This plugin allows opening non-markdown extensions, such as:
 - ...
 
 An icon appears at the top, next to the title.
-Clicking it toggles the document between code block view (with syntax highlighting) and the initial state.
-The button's appearance changes to indicate the current view mode.
-You can customize which file extensions are supported by adding more extensions in the plugin settings.
-You can edit extension from explorer context menu. For example change a new note extension to *.py.
+Clicking it toggles the document between CODE BLOCK VIEW (with syntax highlighting) and the initial state.
+You can customize which file extensions are supported by adding more extensions in the plugin settings, associated with language used in code block view to have syntax highlighting.
 
 ![normal view](assets/normal-view.png)
 ![code view](assets/code-view.png)
+
+## Managing Extensions
+
+### Adding/Editing Extensions
+You can add/edit new extension mappings in several ways:
+- **Settings Tab**: Go to plugin settings to manage all extensions
+- **Command Palette**: Use the "Add Extension Mapping" command
+You can enter new extensions and associated code block language doing: 
+`py:python,...` or `,ts,...` (same extension and language format)
 
 ## Development
 

@@ -76,10 +76,25 @@ export class EditExtensionModal extends Modal {
     contentEl.empty();
   }
 
-  private async saveChanges(): Promise<void> {
-    await this.app.vault.rename(this.file, this.getFullPath());
-    this.close();
+private async saveChanges(): Promise<void> {
+  await this.app.vault.rename(this.file, this.getFullPath());
+ 
+  // Check if the renamed file is currently open in the active editor
+  const activeLeaf = this.app.workspace.getLeaf();
+  const activeView = activeLeaf?.view;
+  
+  if (activeView && 'file' in activeView && activeView.file === this.file) {
+    // Close the current view
+    activeLeaf.detach();
+    
+    // Reopen the file with the new extension
+    setTimeout(async () => {
+      await this.app.workspace.getLeaf("tab").openFile(this.file);
+    }, 20);
   }
+ 
+  this.close();
+}
 
   private getFullPath(): string {
     return path.join(this.dirPath, this.baseName + (this.newExt ? `.${this.newExt}` : ''));

@@ -14,9 +14,9 @@ export class ButtonHandler {
 
             // Use all active extensions from settings
             const settings = this.plugin.settings;
-            const supportedExtensions = settings.finalExtensions || [];
+            const supportedExtensions = settings.finalExtensions || {};
 
-            if (supportedExtensions.includes(extension)) {
+            if (extension in supportedExtensions) {
                 this.addButton();
             } else {
                 this.removeButton();
@@ -93,9 +93,8 @@ export class ButtonHandler {
 
         // Use extension mappings from settings
         const settings = this.plugin.settings;
-        // If extension exists in defaultLanguageMappings, use the mapped language
-        // Otherwise, use the extension directly as language mode
-        const languageMode = settings.defaultLanguageMappings[extension] || extension;
+        // Get the language mapping for this extension from finalExtensions
+        const languageMode = settings.finalExtensions[extension] || extension;
 
         try {
             // Get current content

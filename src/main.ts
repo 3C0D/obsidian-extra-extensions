@@ -1,5 +1,6 @@
 import {
   App,
+  // loadPrism,
   Menu,
   Plugin,
   TAbstractFile,
@@ -11,6 +12,7 @@ import { ButtonHandler } from "./button-handler.ts";
 import { OpenAsCodeSettingTab } from "./settings.ts";
 import { DEFAULT_SETTINGS, type OpenAsCodeSettings } from "./types.ts";
 import { EditExtensionModal } from "./modal-change-extension.ts";
+import { AddExtensionModal } from "./modal-add-extension.ts";
 
 export default class OpenAsCodePlugin extends Plugin {
   settings: OpenAsCodeSettings;
@@ -19,6 +21,25 @@ export default class OpenAsCodePlugin extends Plugin {
 
   async onload(): Promise<void> {
     await this.loadSettings();
+
+    // languages in codeblocks are different. e.g: py not accepted
+    // only used in preview mode
+    // const prism = await loadPrism();
+    // const languages = prism.languages;
+    // console.log("languages", languages);
+
+    // for the edit mode we need codemirror
+    // if (window.CodeMirror) {
+    //   console.log("✅ CodeMirror détecté");
+    //   if (window.CodeMirror.modes) {
+    //     console.log("CodeMirror 5 modes:", Object.keys(window.CodeMirror.modes));
+    //   }
+    // if (window.CodeMirror.EditorState) {
+    //   console.log("CodeMirror 6 détecté");
+    // }
+    // } else {
+    //   console.log("❌ CodeMirror non trouvé directement");
+    // }
 
     // Initialize handlers
     this.extensionHandler = new ExtensionHandler(this);
@@ -36,19 +57,28 @@ export default class OpenAsCodePlugin extends Plugin {
     // Register the event listener for file rename
     this.registerEvent(this.app.workspace.on("file-menu", (menu, file) => addMenuItem(this.app, menu, file)));
 
+    // Add command to open extension modal
+    this.addCommand({
+      id: 'add-extension-mapping',
+      name: 'Add Extension Mapping',
+      callback: () => {
+        const modal = new AddExtensionModal(this.app, this);
+        modal.open();
+      }
+    });
+
   }
 
   async loadSettings(): Promise<void> {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    
-    // Initialize finalExtensions if empty (migration from old settings)
-    if (!this.settings.finalExtensions || this.settings.finalExtensions.length === 0) {
-      this.settings.finalExtensions = [
-        ...Object.keys(this.settings.defaultLanguageMappings),
-        ...(this.settings.customExtensions || [])
-      ];
-      // Remove duplicates
-      this.settings.finalExtensions = [...new Set(this.settings.finalExtensions)];
+
+    // Initialize finalExtensions if empty
+    if (!this.settings.finalExtensions || Object.keys(this.settings.finalExtensions).length === 0) {
+      // Merge default and custom mappings
+      this.settings.finalExtensions = {
+        ...this.settings.defaultLanguageMappings,
+        ...(this.settings.customExtensions || {})
+      };
       await this.saveSettings();
     }
   }
@@ -68,6 +98,8 @@ function addMenuItem(app: App, menu: Menu, file: TAbstractFile): void {
   if (file instanceof TFolder) {
     return;
   }
+
+  // Add menu item to edit file extension
   menu.addItem((item) => {
     item
       .setTitle("Edit Extension")
@@ -93,7 +125,7 @@ function addMenuItem(app: App, menu: Menu, file: TAbstractFile): void {
             const centerPosition = windowWidth / 2;
             const targetPosition = 60 + (modalWidth / 2); // 60px from left + half modal width
             const offsetX = targetPosition - centerPosition;
-            
+
             modalElement.style.transform = `translateX(${offsetX}px)`;
           }
         }, 0);

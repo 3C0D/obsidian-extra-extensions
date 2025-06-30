@@ -31,35 +31,35 @@ export class OpenAsCodeSettingTab extends PluginSettingTab {
           }
         }));
 
-      // Initialize finalExtensions if empty (first load)
-    if (this.plugin.settings.finalExtensions.length === 0) {
-      this.plugin.settings.finalExtensions = Object.keys(this.plugin.settings.defaultLanguageMappings);
+    // Initialize finalExtensions if empty (first load)
+    if (Object.keys(this.plugin.settings.finalExtensions).length === 0) {
+      this.plugin.settings.finalExtensions = { ...this.plugin.settings.defaultLanguageMappings };
       await this.plugin.saveSettings();
     }
 
     // Add extensions setting
     const extensionSetting = new Setting(containerEl)
       .setName('Extra Extensions')
-      .setDesc('Manage all file extensions to be viewed as markdown. (comma separated, no dots). ❗Click outside the text area to validate changes.');
-    
+      .setDesc('Manage file extensions and their code block languages. Format: ",ext:language," or just ",ext,"  (ext and language are the same). You can also use the "Add Extension Mapping" command. ❗Click outside the text area to validate changes.');
+
     extensionSetting.addTextArea(text => {
       this.textAreaEl = text.inputEl;
       text
-        .setPlaceholder('js, ts, py, md, txt, csv')
-        .setValue(this.plugin.settings.finalExtensions.join(', '))
+        .setPlaceholder('js, ts, py:python,...')
+        .setValue(this.formatExtensionsForDisplay())
         .inputEl.style.height = '130px'; // Make textarea higher
-      
+
       text.inputEl.addEventListener('input', () => {
         this.validateExtensionsOnInput();
       });
-      
+
       text.inputEl.addEventListener('blur', async () => {
         await this.processExtensionsOnBlur();
       });
     });
-    
+
     // Add validation message element
-    this.validationEl = containerEl.createEl('div', { 
+    this.validationEl = containerEl.createEl('div', {
       cls: 'extension-validation-message'
     });
     this.validationEl.style.display = 'none';
@@ -76,59 +76,99 @@ export class OpenAsCodeSettingTab extends PluginSettingTab {
     this.updateExtensionsList();
   }
 
-  private getFinalExtensions(): string[] {
-    return this.plugin.settings.finalExtensions || [];
+  private getFinalExtensions(): Record<string, string> {
+    return this.plugin.settings.finalExtensions || {};
   }
 
-  private updateFinalExtensions(extensions: string[]): void {
-    // Remove duplicates and filter out empty strings
-    const uniqueExtensions = [...new Set(extensions.filter(ext => ext.length > 0))];
-    this.plugin.settings.finalExtensions = uniqueExtensions;
+  private formatExtensionsForDisplay(): string {
+    const mappings = this.getFinalExtensions();
+    return Object.entries(mappings)
+      .map(([ext, lang]) => ext === lang ? ext : `${ext}:${lang}`)
+      .join(', ');
   }
 
-  private parseExtensions(value: string): string[] {
-    return value.split(',')  // Split by commas only
-      .map(ext => ext.trim().toLowerCase().replace(/^\./,''))  // Remove leading dots and trim
-      .filter(ext => ext.length > 0);  // Remove empty strings
+  private updateFinalExtensions(mappings: Record<string, string>): void {
+    this.plugin.settings.finalExtensions = { ...mappings };
+  }
+
+  private parseExtensions(value: string): { mappings: Record<string, string>, errors: string[] } {
+    const mappings: Record<string, string> = {};
+    const errors: string[] = [];
+
+    // Check for forbidden characters
+    if (value.includes(';')) {
+      errors.push("Use commas (,) instead of semicolons (;) to separate extensions");
+    }
+
+    // Detect duplicates in the input
+    const seenExtensions = new Set<string>();
+    const inputDuplicates: string[] = [];
+
+    value.split(',')  // Split by commas
+      .map(item => item.trim())  // Trim whitespace
+      .filter(item => item.length > 0)  // Remove empty strings
+      .forEach(item => {
+        const cleanItem = item.toLowerCase().replace(/^\./, '');  // Remove leading dots
+
+        if (cleanItem.includes(':')) {
+          // Format: "ext:language"
+          const [ext, lang] = cleanItem.split(':');
+          if (ext && lang) {
+            const trimmedExt = ext.trim();
+            const trimmedLang = lang.trim();
+            
+            if (seenExtensions.has(trimmedExt)) {
+              inputDuplicates.push(trimmedExt);
+            } else {
+              seenExtensions.add(trimmedExt);
+              mappings[trimmedExt] = trimmedLang;
+            }
+          }
+        } else {
+          // Format: "ext" (maps to itself)
+          if (cleanItem) {
+            if (seenExtensions.has(cleanItem)) {
+              inputDuplicates.push(cleanItem);
+            } else {
+              seenExtensions.add(cleanItem);
+              mappings[cleanItem] = cleanItem;
+            }
+          }
+        }
+      });
+
+    // Add duplicate errors to the input
+    if (inputDuplicates.length > 0) {
+      errors.push(`Duplicate extensions in input: ${[...new Set(inputDuplicates)].join(', ')}`);
+    }
+
+    return { mappings, errors };
   }
 
   private validateExtensionsOnInput(): void {
     const inputValue = this.textAreaEl?.value || '';
-    const inputExtensions = this.parseExtensions(inputValue);
-    
-    if (inputExtensions.length === 0) {
+    const { mappings: inputMappings, errors: parseErrors } = this.parseExtensions(inputValue);
+    const inputExtensions = Object.keys(inputMappings);
+
+    if (inputExtensions.length === 0 && parseErrors.length === 0) {
       this.hideValidationError();
       return;
     }
-    
+
+    const allErrors: string[] = [...parseErrors];
+
     // Check for extensions already registered elsewhere using ExtensionHandler
-    const currentFinalExtensions = this.getFinalExtensions();
+    const currentFinalExtensions = Object.keys(this.getFinalExtensions());
     const alreadyRegistered = inputExtensions.filter(ext => {
       return this.plugin.app.viewRegistry.getTypeByExtension(ext) && !currentFinalExtensions.includes(ext);
     });
-    
-    // Check for internal duplicates in the input
-    const seen = new Set<string>();
-    const internalDuplicates = inputExtensions.filter(ext => {
-      if (seen.has(ext)) {
-        return true;
-      }
-      seen.add(ext);
-      return false;
-    });
-    
-    const allProblems = [...new Set([...alreadyRegistered, ...internalDuplicates])];
-    
-    if (allProblems.length > 0) {
-      let message = '';
-      if (alreadyRegistered.length > 0) {
-        message += `Already registered: ${alreadyRegistered.join(', ')}`;
-      }
-      if (internalDuplicates.length > 0) {
-        if (message) message += '; ';
-        message += `Duplicates: ${internalDuplicates.join(', ')}`;
-      }
-      this.showValidationError(message);
+
+    if (alreadyRegistered.length > 0) {
+      allErrors.push(`Already registered elsewhere: ${alreadyRegistered.join(', ')}`);
+    }
+
+    if (allErrors.length > 0) {
+      this.showValidationError(allErrors.join('; '));
     } else {
       this.hideValidationError();
     }
@@ -155,35 +195,65 @@ export class OpenAsCodeSettingTab extends PluginSettingTab {
 
   private async processExtensionsOnBlur(): Promise<void> {
     const inputValue = this.textAreaEl?.value || '';
-    const inputExtensions = this.parseExtensions(inputValue);
+    const { mappings: inputMappings, errors: parseErrors } = this.parseExtensions(inputValue);
     
+    // If there are parsing errors, stop processing and keep the error displayed
+    if (parseErrors.length > 0) {
+      this.showValidationError(parseErrors.join('; '));
+      return;
+    }
+
+    const inputExtensions = Object.keys(inputMappings);
+
     // Get current state
     const currentFinalExtensions = this.getFinalExtensions();
-    
+    const currentExtensionKeys = Object.keys(currentFinalExtensions);
+
     // Filter out extensions that already exist elsewhere in the system using ExtensionHandler
     const newExtensions = this.plugin.extensionHandler.getNewExtensions(inputExtensions);
-    const duplicateExtensions = inputExtensions.filter(ext => !newExtensions.includes(ext) && !currentFinalExtensions.includes(ext));
-    
-    // Update finalExtensions with valid extensions only
-    this.updateFinalExtensions(inputExtensions.filter(ext => newExtensions.includes(ext) || currentFinalExtensions.includes(ext)));
-    
+    const duplicateExtensions = inputExtensions.filter(ext => !newExtensions.includes(ext) && !currentExtensionKeys.includes(ext));
+
+    // If there are extensions already registered elsewhere, stop and display the error
+    if (duplicateExtensions.length > 0) {
+      this.showValidationError(`Extensions already registered elsewhere: ${duplicateExtensions.join(', ')}`);
+      return;
+    }
+
+    // Create valid mappings only (all extensions are valid now)
+    const validMappings: Record<string, string> = {};
+    Object.entries(inputMappings).forEach(([ext, lang]) => {
+      if (newExtensions.includes(ext) || currentExtensionKeys.includes(ext)) {
+        validMappings[ext] = lang;
+      }
+    });
+
+    // Update finalExtensions with valid mappings
+    this.updateFinalExtensions(validMappings);
+
     // Update customExtensions based on what's not in defaultLanguageMappings
     const defaultExtensions = Object.keys(this.plugin.settings.defaultLanguageMappings);
-    this.plugin.settings.customExtensions = this.plugin.settings.finalExtensions.filter(ext => !defaultExtensions.includes(ext));
-    
+    const customMappings: Record<string, string> = {};
+    Object.entries(this.plugin.settings.finalExtensions).forEach(([ext, lang]) => {
+      if (!defaultExtensions.includes(ext)) {
+        customMappings[ext] = lang;
+      }
+    });
+    this.plugin.settings.customExtensions = customMappings;
+
     await this.plugin.saveSettings();
 
     // Unregister old extensions and register new ones using ExtensionHandler
-    this.plugin.extensionHandler.unregisterCodeExtensions(currentFinalExtensions);
-    this.plugin.extensionHandler.registerCodeExtensions(this.plugin.settings.finalExtensions);
+    this.plugin.extensionHandler.unregisterCodeExtensions(currentExtensionKeys);
+    this.plugin.extensionHandler.registerCodeExtensions(Object.keys(this.plugin.settings.finalExtensions));
 
     // Update UI
     this.updateExtensionsList();
-    
+
     // Calculate changes for notifications
-    const addedExtensions = this.plugin.settings.finalExtensions.filter(ext => !currentFinalExtensions.includes(ext));
-    const removedExtensions = currentFinalExtensions.filter(ext => !this.plugin.settings.finalExtensions.includes(ext));
-    
+    const newFinalExtensions = Object.keys(this.plugin.settings.finalExtensions);
+    const addedExtensions = newFinalExtensions.filter(ext => !currentExtensionKeys.includes(ext));
+    const removedExtensions = currentExtensionKeys.filter(ext => !newFinalExtensions.includes(ext));
+
     // Show notifications
     if (addedExtensions.length > 0) {
       new Notice(`Added extensions: ${addedExtensions.join(', ')}`);
@@ -191,13 +261,10 @@ export class OpenAsCodeSettingTab extends PluginSettingTab {
     if (removedExtensions.length > 0) {
       new Notice(`Removed extensions: ${removedExtensions.join(', ')}`);
     }
-    if (duplicateExtensions.length > 0) {
-      new Notice(`Extensions already registered elsewhere: ${duplicateExtensions.join(', ')}`);
-    }
-    
+
     // Update textarea with clean extensions
     if (this.textAreaEl) {
-      this.textAreaEl.value = this.plugin.settings.finalExtensions.join(', ');
+      this.textAreaEl.value = this.formatExtensionsForDisplay();
     }
     this.hideValidationError();
   }
@@ -209,35 +276,42 @@ export class OpenAsCodeSettingTab extends PluginSettingTab {
 
     const finalExtensions = this.getFinalExtensions();
     const defaultExtensions = Object.keys(this.plugin.settings.defaultLanguageMappings);
-    
-    if (finalExtensions.length > 0) {
+    const extensionKeys = Object.keys(finalExtensions);
+
+    if (extensionKeys.length > 0) {
       this.extList.createEl('h6', { text: 'Active Extensions:' });
-      
+
       // Separate default and custom for display
-      const activeDefaults = finalExtensions.filter(ext => defaultExtensions.includes(ext));
-      const activeCustoms = finalExtensions.filter(ext => !defaultExtensions.includes(ext));
-      
+      const activeDefaults = extensionKeys.filter(ext => defaultExtensions.includes(ext));
+      const activeCustoms = extensionKeys.filter(ext => !defaultExtensions.includes(ext));
+
       if (activeDefaults.length > 0) {
-        this.extList.createEl('p', { 
-          text: `Default: ${activeDefaults.sort().join(', ')}`,
+        const defaultMappings = activeDefaults.map(ext =>
+          ext === finalExtensions[ext] ? ext : `${ext}:${finalExtensions[ext]}`
+        ).sort();
+        this.extList.createEl('p', {
+          text: `Default: ${defaultMappings.join(', ')}`,
           attr: { style: 'color: #888; margin: 5px 0; font-size: 0.9em;' }
         });
       }
-      
+
       if (activeCustoms.length > 0) {
-        this.extList.createEl('p', { 
-          text: `Custom: ${activeCustoms.sort().join(', ')}`,
+        const customMappings = activeCustoms.map(ext =>
+          ext === finalExtensions[ext] ? ext : `${ext}:${finalExtensions[ext]}`
+        ).sort();
+        this.extList.createEl('p', {
+          text: `Custom: ${customMappings.join(', ')}`,
           attr: { style: 'color: #4a9eff; margin: 5px 0; font-size: 0.9em;' }
         });
       }
-      
+
       // Show total count
-      this.extList.createEl('p', { 
-        text: `Total: ${finalExtensions.length} extensions`,
+      this.extList.createEl('p', {
+        text: `Total: ${extensionKeys.length} extensions`,
         attr: { style: 'color: #666; margin-top: 10px; font-size: 0.8em; font-style: italic;' }
       });
     } else {
-      this.extList.createEl('p', { 
+      this.extList.createEl('p', {
         text: 'No extensions configured',
         attr: { style: 'color: #888; font-style: italic;' }
       });

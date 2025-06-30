@@ -1,17 +1,17 @@
 export interface OpenAsCodeSettings {
   enabled: boolean;
-  customExtensions: string[];
+  customExtensions: Record<string, string>; // Custom extension to language mappings
   defaultLanguageMappings: Record<string, string>;
-  finalExtensions: string[]; // Final list of all active extensions
+  finalExtensions: Record<string, string>; // Final mapping of all active extensions to languages
 }
 
 export const DEFAULT_SETTINGS: OpenAsCodeSettings = {
   enabled: true,
-  customExtensions: [],
-  finalExtensions: [], // Will be populated from defaultLanguageMappings on first load
+  customExtensions: {},
+  finalExtensions: {}, // Will be populated from defaultLanguageMappings on first load
   defaultLanguageMappings: {
-    "js": "javascript",
-    "ts": "typescript",
+    "js": "js",
+    "ts": "ts",
     "jsx": "jsx",
     "tsx": "tsx",
     "css": "css",
@@ -25,17 +25,19 @@ export const DEFAULT_SETTINGS: OpenAsCodeSettings = {
     "py": "python",
     "rb": "ruby",
     "java": "java",
-    "c": "clike",
-    "cpp": "clike",
-    "cs": "clike",
+    "c": "c",
+    "cpp": "cpp",
+    "cs": "cs",
     "php": "php",
     "go": "go",
     "rust": "rust",
     "sql": "sql",
     "sh": "shell",
     "bash": "shell",
+    "bat": "shell",
+    "ps1": "powershell",
     "tex": "stex",
     "r": "r",
-    "txt": "markdown",
+    "txt": "txt",
   }
 };
