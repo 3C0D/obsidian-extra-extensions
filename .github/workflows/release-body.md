@@ -1,1 +1,1 @@
-ext:language and modal add
+fix if text added at start or end in codeblockview preventing from returning to normal view
