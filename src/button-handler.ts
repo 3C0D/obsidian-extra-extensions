@@ -101,10 +101,10 @@ export class ButtonHandler {
             const currentContent = activeView.editor.getValue();
 
             if (this.isCurrentlyInCodeBlockView()) {
-                // Remove code block formatting - just remove the first and last lines with 5 backticks
+                // Remove code block formatting - remove the 5 backticks patterns anywhere in content
                 const contentWithoutCodeBlock = currentContent
-                    .replace(/^\s*`{5}[\w]*\s*\n/, '') // Remove opening code block
-                    .replace(/\n\s*`{5}\s*$/, '');     // Remove closing code block
+                    .replace(/`{5}[\w]*\s*\n/, '') // Remove opening code block
+                    .replace(/\n\s*`{5}/, '');     // Remove closing code block
 
                 // Update the editor content
                 activeView.editor.setValue(contentWithoutCodeBlock);
@@ -154,8 +154,9 @@ export class ButtonHandler {
         if (!activeView) return false;
 
         const currentContent = activeView.editor.getValue();
-        const hasOpeningCodeBlock = /^\s*`{5}[\w]*\s*\n/.test(currentContent);
-        const hasClosingCodeBlock = /\n\s*`{5}\s*$/.test(currentContent);
+        // Look for 5 backticks pattern anywhere in the content, not just at start/end
+        const hasOpeningCodeBlock = /`{5}[\w]*\s*\n/.test(currentContent);
+        const hasClosingCodeBlock = /\n\s*`{5}/.test(currentContent);
 
         return hasOpeningCodeBlock && hasClosingCodeBlock;
     }
